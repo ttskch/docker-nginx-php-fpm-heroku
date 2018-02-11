@@ -75,7 +75,7 @@ RUN \
     \
     # add non-root user
     # @see https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user
-    && adduser -D heroku \
+    && adduser -D nonroot \
     \
     # followings are just for local environment
     # (on heroku dyno there is no permission problem because most of the filesystem owned by the current non-root user)
@@ -102,9 +102,9 @@ RUN \
     # to output logs
     && chmod -R a+w /var/log \
     \
-    # add heroku to sudoers
+    # add nonroot to sudoers
     && apk add --update sudo \
-    && echo "heroku ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    && echo "nonroot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # copy application code and tweak permission for non-root user
 ONBUILD COPY / $DOCROOT/
