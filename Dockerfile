@@ -62,24 +62,11 @@ COPY nginx-default.conf $NGINX_CONFD_DIR/default.conf
 COPY supervisor.programs.ini /etc/supervisor.d/
 COPY start.sh /
 
-RUN \
-    # composer install
-    if [ -f "composer.json" ]; then \
-        EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
-        && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-        && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
-        && php composer-setup.php --install-dir=/usr/bin --filename=composer \
-        && php -r "unlink('composer-setup.php');" \
-        && composer install --no-interaction \
-    ; fi \
-    \
-    # add non-root user
-    # @see https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user
-    && adduser -D nonroot \
-    \
+# add non-root user
+# @see https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user
+RUN adduser -D nonroot \
     # followings are just for local environment
     # (on heroku dyno there is no permission problem because most of the filesystem owned by the current non-root user)
-    \
     && chmod a+x /start.sh \
     \
     # to update conf files and create temp files under the directory via sed command on runtime
@@ -106,8 +93,20 @@ RUN \
     && apk add --update sudo \
     && echo "nonroot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# copy application code and tweak permission for non-root user
+# copy application code
 ONBUILD COPY / $DOCROOT/
+
+# tweak permission for non-root user
 ONBUILD RUN chmod -R a+w $DOCROOT
+
+# composer install
+ONBUILD RUN if [ -f "composer.json" ]; then \
+        EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
+        && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+        && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
+        && php composer-setup.php --install-dir=/usr/bin --filename=composer \
+        && php -r "unlink('composer-setup.php');" \
+        && composer install --no-interaction \
+    ; fi
 
 CMD ["/start.sh"]
