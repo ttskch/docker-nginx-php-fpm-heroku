@@ -3,7 +3,9 @@ FROM alpine
 ENV DOCROOT /docroot
 WORKDIR $DOCROOT
 
-RUN apk update \
+RUN \
+    apk update \
+    \
     # install php
     && apk add php7 \
     && apk add php7-apcu \
@@ -52,7 +54,14 @@ RUN apk update \
     && mkdir -p /etc/supervisor.d/ \
     \
     # remove caches to decrease image size
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    \
+    # install composer
+    EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
+    && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
+    && php composer-setup.php --install-dir=/usr/bin --filename=composer \
+    && php -r "unlink('composer-setup.php');"
 
 ENV PHP_INI_DIR /etc/php7
 ENV NGINX_CONFD_DIR /etc/nginx/conf.d
@@ -62,9 +71,11 @@ COPY nginx-default.conf $NGINX_CONFD_DIR/default.conf
 COPY supervisor.programs.ini /etc/supervisor.d/
 COPY start.sh /
 
-# add non-root user
-# @see https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user
-RUN adduser -D nonroot \
+RUN \
+    # add non-root user
+    # @see https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user
+    adduser -D nonroot \
+    \
     # followings are just for local environment
     # (on heroku dyno there is no permission problem because most of the filesystem owned by the current non-root user)
     && chmod a+x /start.sh \
@@ -96,17 +107,14 @@ RUN adduser -D nonroot \
 # copy application code
 ONBUILD COPY / $DOCROOT/
 
-# tweak permission for non-root user
-ONBUILD RUN chmod -R a+w $DOCROOT
-
-# composer install
-ONBUILD RUN if [ -f "composer.json" ]; then \
-        EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
-        && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-        && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
-        && php composer-setup.php --install-dir=/usr/bin --filename=composer \
-        && php -r "unlink('composer-setup.php');" \
-        && composer install --no-interaction \
+ONBUILD RUN \
+    # fix permission of docroot for non-root user
+    chmod -R a+w $DOCROOT \
+    \
+    # attempt to composer install
+    # (if depends on any commands that don't exist at this time, like npm, do composer install on downstream Dockerfile expressly)
+    if [ -f "composer.json" ]; then \
+        composer install --no-interaction; exit 0 \
     ; fi
 
 CMD ["/start.sh"]
