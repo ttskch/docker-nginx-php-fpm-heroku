@@ -57,7 +57,7 @@ RUN \
     && rm -rf /var/cache/apk/* \
     \
     # install composer
-    EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
+    && EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
     && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
     && php composer-setup.php --install-dir=/usr/bin --filename=composer \
@@ -113,7 +113,7 @@ ONBUILD RUN \
     \
     # attempt to composer install
     # (if depends on any commands that don't exist at this time, like npm, do composer install on downstream Dockerfile expressly)
-    if [ -f "composer.json" ]; then \
+    && if [ -f "composer.json" ]; then \
         composer install --no-interaction; exit 0 \
     ; fi
 
