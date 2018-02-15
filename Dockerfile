@@ -67,7 +67,7 @@ ENV PHP_INI_DIR /etc/php7
 ENV NGINX_CONFD_DIR /etc/nginx/conf.d
 
 COPY php.ini $PHP_INI_DIR/
-COPY nginx-default.conf $NGINX_CONFD_DIR/default.conf
+COPY nginx.conf $NGINX_CONFD_DIR/default.conf
 COPY supervisor.programs.ini /etc/supervisor.d/
 COPY start.sh /
 
