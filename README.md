@@ -29,6 +29,8 @@ echo 'Hello, Heroku Container Registry!';
 ```
 # Dockerfile
 FROM ttskch/nginx-php-fpm-heroku
+
+UESR nonroot # for local development
 ```
 
 ### 2. Deploy to Heroku
@@ -61,9 +63,9 @@ $ docker run -p {port}:8888 -v $(pwd):/docroot registry.heroku.com/{appname}/web
 
 Then browse http://localhost:{port}
 
-## Customization
+## More examples
 
-// todo
+See [examples](examples).
 
 ## What's special?
 
@@ -71,3 +73,10 @@ Then browse http://localhost:{port}
 * Small image size
 * Nginx correctly listens to $PORT which set by Herkou web dyno on runtime
 * [As Heroku recommends](https://devcenter.heroku.com/articles/container-registry-and-runtime#run-the-image-as-a-non-root-user), can run as non-root user locally (Many permission problems are solved)
+
+## Getting involved
+
+Feel free to send Pull Request for
+
+* Fixing bug or enhancement
+* Adding some [examples](examples)
