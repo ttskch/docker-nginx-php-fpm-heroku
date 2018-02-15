@@ -30,7 +30,8 @@ echo 'Hello, Heroku Container Registry!';
 # Dockerfile
 FROM ttskch/nginx-php-fpm-heroku
 
-UESR nonroot # for local development
+# as will be described later, just for local development
+UESR nonroot
 ```
 
 ### 2. Deploy to Heroku
