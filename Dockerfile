@@ -111,7 +111,7 @@ ONBUILD RUN \
     # attempt to composer install
     # (if depends on any commands that don't exist at this time, like npm, explicit doing composer install on downstream Dockerfile is necessary)
     if [ -f "composer.json" ]; then \
-        composer install --no-interaction; exit 0 \
+        composer install --no-interaction || : \
     ; fi \
     \
     # fix permission of docroot for non-root user
