@@ -33,7 +33,7 @@ echo 'Hello, Heroku Container Registry!';
 FROM ttskch/nginx-php-fpm-heroku
 
 # as will be described later, just for local development
-UESR nonroot
+USER nonroot
 ```
 
 ### 2. Deploy to Heroku
